@@ -1,345 +1,171 @@
+<?php
+
+require 'db.php';
+
+$pdo = getDatabase();
+
+$stmt = $pdo->query("
+    SELECT
+        a.*,
+        GROUP_CONCAT(
+            l.title
+            SEPARATOR ', '
+        ) AS languages
+
+    FROM applications a
+
+    LEFT JOIN application_language al
+        ON a.id = al.application_id
+
+    LEFT JOIN languages l
+        ON l.id = al.language_id
+
+    GROUP BY a.id
+
+    ORDER BY a.id DESC
+");
+
+$applications = $stmt->fetchAll(
+    PDO::FETCH_ASSOC
+);
+
+?>
+
 <!DOCTYPE html>
 <html lang="ru">
 
 <head>
 
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
 
-    <title>Лабораторная работа №4</title>
+<title>Сохранённые заявки</title>
 
-    <link rel="stylesheet"
-          href="style.css">
+<link rel="stylesheet"
+      href="style.css">
 
 </head>
 
 <body>
 
-<div class="card">
+<div class="card large-card">
 
-    <h1>Анкета пользователя</h1>
+    <h1>Сохранённые заявки</h1>
 
     <p class="author">
         Проект выполнила: Рыбалко Евгения
     </p>
 
-    <?php if (!empty($successMessage)): ?>
+    <?php if (empty($applications)): ?>
 
-        <div class="success-message">
+        <div class="empty-box">
 
-            <?= htmlspecialchars($successMessage) ?>
+            Пока нет сохранённых заявок
+
+        </div>
+
+    <?php else: ?>
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+
+                <tr>
+
+                    <th>ID</th>
+                    <th>ФИО</th>
+                    <th>Телефон</th>
+                    <th>Email</th>
+                    <th>Дата рождения</th>
+                    <th>Пол</th>
+                    <th>Биография</th>
+                    <th>Контракт</th>
+                    <th>Языки</th>
+                    <th>Дата создания</th>
+
+                </tr>
+
+                </thead>
+
+                <tbody>
+
+                <?php foreach ($applications as $app): ?>
+
+                    <tr>
+
+                        <td>
+                            <?= htmlspecialchars($app['id']) ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars($app['full_name']) ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars($app['phone']) ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars($app['email']) ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars($app['birth_date']) ?>
+                        </td>
+
+                        <td>
+                            <?= $app['gender'] === 'male'
+                                ? 'Мужской'
+                                : 'Женский' ?>
+                        </td>
+
+                        <td class="bio-cell">
+                            <?= nl2br(
+                                htmlspecialchars(
+                                    $app['biography']
+                                )
+                            ) ?>
+                        </td>
+
+                        <td>
+                            <?= $app['agreement']
+                                ? 'Да'
+                                : 'Нет' ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars(
+                                $app['languages']
+                            ) ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars(
+                                $app['created_at']
+                            ) ?>
+                        </td>
+
+                    </tr>
+
+                <?php endforeach; ?>
+
+                </tbody>
+
+            </table>
 
         </div>
 
     <?php endif; ?>
 
-    <form
-        action="submit.php"
-        method="POST"
-    >
-
-        <!-- ФИО -->
-
-        <label for="full_name">
-
-            ФИО
-
-        </label>
-
-        <input
-            type="text"
-            id="full_name"
-            name="full_name"
-
-            value="<?= htmlspecialchars($values['full_name']) ?>"
-
-            class="<?= isset($errors['full_name']) ? 'error' : '' ?>"
-        >
-
-        <?php if (isset($errors['full_name'])): ?>
-
-            <div class="message">
-
-                <?= htmlspecialchars($errors['full_name']) ?>
-
-            </div>
-
-        <?php endif; ?>
-
-        <!-- Телефон -->
-
-        <label for="phone">
-
-            Телефон
-
-        </label>
-
-        <input
-            type="tel"
-            id="phone"
-            name="phone"
-
-            value="<?= htmlspecialchars($values['phone']) ?>"
-
-            class="<?= isset($errors['phone']) ? 'error' : '' ?>"
-        >
-
-        <?php if (isset($errors['phone'])): ?>
-
-            <div class="message">
-
-                <?= htmlspecialchars($errors['phone']) ?>
-
-            </div>
-
-        <?php endif; ?>
-
-        <!-- EMAIL -->
-
-        <label for="email">
-
-            Email
-
-        </label>
-
-        <input
-            type="email"
-            id="email"
-            name="email"
-
-            value="<?= htmlspecialchars($values['email']) ?>"
-
-            class="<?= isset($errors['email']) ? 'error' : '' ?>"
-        >
-
-        <?php if (isset($errors['email'])): ?>
-
-            <div class="message">
-
-                <?= htmlspecialchars($errors['email']) ?>
-
-            </div>
-
-        <?php endif; ?>
-
-        <!-- ДАТА -->
-
-        <label for="birth_date">
-
-            Дата рождения
-
-        </label>
-
-        <input
-            type="date"
-            id="birth_date"
-            name="birth_date"
-
-            value="<?= htmlspecialchars($values['birth_date']) ?>"
-
-            class="<?= isset($errors['birth_date']) ? 'error' : '' ?>"
-        >
-
-        <?php if (isset($errors['birth_date'])): ?>
-
-            <div class="message">
-
-                <?= htmlspecialchars($errors['birth_date']) ?>
-
-            </div>
-
-        <?php endif; ?>
-
-        <!-- ПОЛ -->
-
-        <label>
-
-            Пол
-
-        </label>
-
-        <div class="radio-group">
-
-            <label>
-
-                <input
-                    type="radio"
-                    name="gender"
-                    value="male"
-
-                    <?= $values['gender'] === 'male'
-                        ? 'checked'
-                        : '' ?>
-                >
-
-                Мужской
-
-            </label>
-
-            <label>
-
-                <input
-                    type="radio"
-                    name="gender"
-                    value="female"
-
-                    <?= $values['gender'] === 'female'
-                        ? 'checked'
-                        : '' ?>
-                >
-
-                Женский
-
-            </label>
-
-        </div>
-
-        <?php if (isset($errors['gender'])): ?>
-
-            <div class="message">
-
-                <?= htmlspecialchars($errors['gender']) ?>
-
-            </div>
-
-        <?php endif; ?>
-
-        <!-- ЯЗЫКИ -->
-
-        <label for="languages">
-
-            Любимые языки программирования
-
-        </label>
-
-        <?php
-
-        $selectedLanguages =
-            json_decode(
-                $_COOKIE['languages'] ?? '[]',
-                true
-            );
-
-        ?>
-
-        <select
-            id="languages"
-            name="languages[]"
-            multiple
-
-            class="<?= isset($errors['languages']) ? 'error' : '' ?>"
-        >
-
-            <?php foreach ($languages as $language): ?>
-
-                <option
-
-                    value="<?= $language['id'] ?>"
-
-                    <?= in_array(
-                        $language['id'],
-                        $selectedLanguages ?? []
-                    )
-                        ? 'selected'
-                        : '' ?>
-                >
-
-                    <?= htmlspecialchars(
-                        $language['title']
-                    ) ?>
-
-                </option>
-
-            <?php endforeach; ?>
-
-        </select>
-
-        <?php if (isset($errors['languages'])): ?>
-
-            <div class="message">
-
-                <?= htmlspecialchars($errors['languages']) ?>
-
-            </div>
-
-        <?php endif; ?>
-
-        <!-- БИОГРАФИЯ -->
-
-        <label for="biography">
-
-            Биография
-
-        </label>
-
-        <textarea
-            id="biography"
-            name="biography"
-            rows="5"
-
-            class="<?= isset($errors['biography']) ? 'error' : '' ?>"
-        ><?= htmlspecialchars($values['biography']) ?></textarea>
-
-        <?php if (isset($errors['biography'])): ?>
-
-            <div class="message">
-
-                <?= htmlspecialchars($errors['biography']) ?>
-
-            </div>
-
-        <?php endif; ?>
-
-        <!-- СОГЛАСИЕ -->
-
-        <div class="checkbox">
-
-            <label>
-
-                <input
-                    type="checkbox"
-                    name="agreement"
-
-                    <?= !empty($values['agreement'])
-                        ? 'checked'
-                        : '' ?>
-                >
-
-                С контрактом ознакомлен(а)
-
-            </label>
-
-        </div>
-
-        <?php if (isset($errors['agreement'])): ?>
-
-            <div class="message">
-
-                <?= htmlspecialchars($errors['agreement']) ?>
-
-            </div>
-
-        <?php endif; ?>
-
-        <!-- КНОПКА -->
-
-        <button type="submit">
-
-            Сохранить
-
-        </button>
-
-    </form>
-
-    <!-- ССЫЛКИ -->
-
     <div class="bottom-link">
 
-        <a href="view.php">
+        <a href="index.php">
 
-            Просмотреть заявки
+            Вернуться к форме
 
         </a>
 

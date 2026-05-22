@@ -80,3 +80,57 @@ button:hover {
     color: #d62839;
     font-size: 14px;
 }
+
+.large-card {
+    max-width: 1400px;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    margin-top: 25px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    overflow: hidden;
+    border-radius: 16px;
+}
+
+thead {
+    background: #ffd9e5;
+}
+
+th {
+    padding: 16px;
+    text-align: left;
+    color: #8a4d66;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+td {
+    padding: 16px;
+    border-top: 1px solid #f6d5df;
+    vertical-align: top;
+    background: #fffdfd;
+    color: #5f4d54;
+}
+
+tr:hover td {
+    background: #fff6f8;
+}
+
+.bio-cell {
+    min-width: 220px;
+    line-height: 1.5;
+}
+
+.empty-box {
+    padding: 20px;
+    border-radius: 16px;
+    background: #fff1f5;
+    color: #a25f79;
+    text-align: center;
+    margin-top: 20px;
+}
