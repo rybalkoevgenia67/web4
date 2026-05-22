@@ -7,8 +7,6 @@ $pdo = getDatabase();
 $errors = [];
 $values = [];
 
-/* Поля формы */
-
 $formFields = [
     'full_name',
     'phone',
@@ -20,15 +18,11 @@ $formFields = [
     'languages'
 ];
 
-/* Загружаем сохранённые значения */
-
 foreach ($formFields as $field) {
 
     $values[$field] =
         $_COOKIE[$field] ?? '';
 }
-
-/* Загружаем ошибки */
 
 foreach ($formFields as $field) {
 
@@ -39,8 +33,6 @@ foreach ($formFields as $field) {
         $errors[$field] =
             $_COOKIE[$errorKey];
 
-        /* Удаляем cookie ошибки */
-
         setcookie(
             $errorKey,
             '',
@@ -49,8 +41,6 @@ foreach ($formFields as $field) {
         );
     }
 }
-
-/* Сообщение об успехе */
 
 $successMessage = '';
 
@@ -67,8 +57,6 @@ if (isset($_COOKIE['success'])) {
     );
 }
 
-/* Получаем языки */
-
 $stmt = $pdo->query("
     SELECT *
     FROM languages
@@ -78,8 +66,6 @@ $stmt = $pdo->query("
 $languages = $stmt->fetchAll(
     PDO::FETCH_ASSOC
 );
-
-/* Подключаем форму */
 
 include 'form.php';
 
