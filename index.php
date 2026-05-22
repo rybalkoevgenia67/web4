@@ -1,6 +1,6 @@
 <?php
 
-require 'db.php';
+require_once 'db.php';
 
 $pdo = getDatabase();
 
@@ -20,53 +20,35 @@ $formFields = [
     'languages'
 ];
 
-/* Получаем сохранённые значения */
+/* Загружаем сохранённые значения */
 
 foreach ($formFields as $field) {
 
-    if (isset($_COOKIE[$field])) {
-
-        $values[$field] = $_COOKIE[$field];
-
-    } else {
-
-        $values[$field] = '';
-    }
+    $values[$field] =
+        $_COOKIE[$field] ?? '';
 }
 
-/* Получаем ошибки */
+/* Загружаем ошибки */
 
 foreach ($formFields as $field) {
 
-    $errorName = $field . '_error';
+    $errorKey = $field . '_error';
 
-    if (isset($_COOKIE[$errorName])) {
+    if (isset($_COOKIE[$errorKey])) {
 
         $errors[$field] =
-            $_COOKIE[$errorName];
+            $_COOKIE[$errorKey];
 
-        /* Удаляем после использования */
+        /* Удаляем cookie ошибки */
 
         setcookie(
-            $errorName,
+            $errorKey,
             '',
             time() - 3600,
             '/'
         );
     }
 }
-
-/* Получаем языки из БД */
-
-$stmt = $pdo->query("
-    SELECT *
-    FROM languages
-    ORDER BY title
-");
-
-$languages = $stmt->fetchAll(
-    PDO::FETCH_ASSOC
-);
 
 /* Сообщение об успехе */
 
@@ -84,6 +66,18 @@ if (isset($_COOKIE['success'])) {
         '/'
     );
 }
+
+/* Получаем языки */
+
+$stmt = $pdo->query("
+    SELECT *
+    FROM languages
+    ORDER BY title
+");
+
+$languages = $stmt->fetchAll(
+    PDO::FETCH_ASSOC
+);
 
 /* Подключаем форму */
 
