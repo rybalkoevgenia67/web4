@@ -1,34 +1,40 @@
 <?php
 
-function getDatabase() {
+if (!function_exists('getDatabase')) {
 
-    static $pdo = null;
+    function getDatabase() {
 
-    if ($pdo === null) {
+        static $pdo = null;
 
-        $host = 'localhost';
-        $dbname = 'u82673'; 
-        $user = 'u82673';
-        $password = '4038561';
+        if ($pdo === null) {
 
-        try {
+            $host = 'localhost';
+            $dbname = 'u82673';
+            $user = 'u82673';
+            $password = '4038561';
 
-            $pdo = new PDO(
-                "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
-                $user,
-                $password
-            );
+            try {
 
-            $pdo->setAttribute(
-                PDO::ATTR_ERRMODE,
-                PDO::ERRMODE_EXCEPTION
-            );
+                $pdo = new PDO(
+                    "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
+                    $user,
+                    $password
+                );
 
-        } catch (PDOException $e) {
+                $pdo->setAttribute(
+                    PDO::ATTR_ERRMODE,
+                    PDO::ERRMODE_EXCEPTION
+                );
 
-            die('Ошибка подключения: ' . $e->getMessage());
+            } catch (PDOException $e) {
+
+                die(
+                    'Ошибка подключения: '
+                    . $e->getMessage()
+                );
+            }
         }
-    }
 
-    return $pdo;
+        return $pdo;
+    }
 }
