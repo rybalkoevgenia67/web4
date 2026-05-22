@@ -1,6 +1,6 @@
 <?php
 
-require 'db.php';
+require_once 'db.php';
 
 $pdo = getDatabase();
 
@@ -12,35 +12,41 @@ $email = trim($_POST['email'] ?? '');
 $birth_date = trim($_POST['birth_date'] ?? '');
 $gender = trim($_POST['gender'] ?? '');
 $biography = trim($_POST['biography'] ?? '');
-$agreement = isset($_POST['agreement']);
-$languages = $_POST['languages'] ?? [];
 
-/* ФИО */
+$agreement = isset($_POST['agreement']);
+
+$languages =
+    $_POST['languages'] ?? [];
+
 if (
     empty($full_name) ||
-    !preg_match('/^[а-яА-Яa-zA-Z\s\-]{1,150}$/u', $full_name)
+    !preg_match(
+        '/^[а-яА-Яa-zA-Z\s\-]{1,150}$/u',
+        $full_name
+    )
 ) {
 
     $errors['full_name'] =
-        'Допустимы только буквы, пробелы и дефис (до 150 символов)';
+        'Только буквы, пробелы и дефис';
 }
 
-/* Телефон */
 if (
     empty($phone) ||
-    !preg_match('/^[0-9+\-\s\(\)]{5,30}$/', $phone)
+    !preg_match(
+        '/^[0-9+\-\s()]{5,30}$/',
+        $phone
+    )
 ) {
 
     $errors['phone'] =
-        'Допустимы цифры, пробелы, +, -, скобки';
+        'Допустимы цифры, +, -, пробелы';
 }
 
-/* Email */
 if (
     empty($email) ||
-    !preg_match(
-        '/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/',
-        $email
+    !filter_var(
+        $email,
+        FILTER_VALIDATE_EMAIL
     )
 ) {
 
@@ -48,115 +54,81 @@ if (
         'Введите корректный email';
 }
 
-/* Дата */
 if (
-    empty($birth_date) ||
-    !preg_match('/^\d{4}-\d{2}-\d{2}$/', $birth_date)
+    empty($birth_date)
 ) {
 
     $errors['birth_date'] =
-        'Введите корректную дату';
+        'Выберите дату';
 }
 
-/* Пол */
 if (
-    !in_array($gender, ['male', 'female'])
+    !in_array(
+        $gender,
+        ['male', 'female']
+    )
 ) {
 
     $errors['gender'] =
         'Выберите пол';
 }
 
-/* Биография */
 if (
-    !empty($biography) &&
-    !preg_match('/^[а-яА-Яa-zA-Z0-9\s.,!?()\-]*$/u', $biography)
+    empty($languages)
 ) {
 
-    $errors['biography'] =
-        'Недопустимые символы в биографии';
-}
-
-/* Языки */
-if (empty($languages)) {
-
     $errors['languages'] =
-        'Выберите минимум один язык';
+        'Выберите язык';
 }
 
-/* Контракт */
 if (!$agreement) {
 
     $errors['agreement'] =
         'Необходимо согласиться';
 }
 
-/* Сохраняем значения */
-setcookie(
-    'full_name',
-    $full_name,
-    time() + 60 * 60 * 24 * 365
-);
+/* cookies */
 
-setcookie(
-    'phone',
-    $phone,
-    time() + 60 * 60 * 24 * 365
-);
+foreach ($_POST as $key => $value) {
 
-setcookie(
-    'email',
-    $email,
-    time() + 60 * 60 * 24 * 365
-);
+    if (is_array($value)) {
 
-setcookie(
-    'birth_date',
-    $birth_date,
-    time() + 60 * 60 * 24 * 365
-);
+        $value =
+            json_encode($value);
+    }
 
-setcookie(
-    'gender',
-    $gender,
-    time() + 60 * 60 * 24 * 365
-);
+    setcookie(
+        $key,
+        $value,
+        time() + 31536000,
+        '/'
+    );
+}
 
-setcookie(
-    'biography',
-    $biography,
-    time() + 60 * 60 * 24 * 365
-);
+/* ошибки */
 
-setcookie(
-    'agreement',
-    $agreement,
-    time() + 60 * 60 * 24 * 365
-);
-
-setcookie(
-    'languages',
-    json_encode($languages),
-    time() + 60 * 60 * 24 * 365
-);
-
-/* Ошибки */
 if (!empty($errors)) {
 
-    foreach ($errors as $field => $error) {
+    foreach (
+        $errors as $field => $error
+    ) {
 
         setcookie(
             $field . '_error',
-            $error
+            $error,
+            0,
+            '/'
         );
     }
 
-    header('Location: index.php');
+    header(
+        'Location: index.php'
+    );
 
     exit();
 }
 
-/* Запись в БД */
+/* сохранение */
 
 try {
 
@@ -186,10 +158,12 @@ try {
         $agreement ? 1 : 0
     ]);
 
-    $applicationId = $pdo->lastInsertId();
+    $applicationId =
+        $pdo->lastInsertId();
 
     $stmt = $pdo->prepare("
-        INSERT INTO application_language
+        INSERT INTO
+        application_language
         (
             application_id,
             language_id
@@ -197,7 +171,9 @@ try {
         VALUES (?, ?)
     ");
 
-    foreach ($languages as $languageId) {
+    foreach (
+        $languages as $languageId
+    ) {
 
         $stmt->execute([
             $applicationId,
@@ -206,6 +182,13 @@ try {
     }
 
     $pdo->commit();
+
+    setcookie(
+        'success',
+        'Данные успешно сохранены!',
+        0,
+        '/'
+    );
 
 } catch (Exception $e) {
 

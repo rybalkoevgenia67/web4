@@ -1,178 +1,140 @@
-<?php
-
-require 'db.php';
-
-$pdo = getDatabase();
-
-$stmt = $pdo->query("
-    SELECT
-        a.*,
-        GROUP_CONCAT(
-            l.title
-            SEPARATOR ', '
-        ) AS languages
-
-    FROM applications a
-
-    LEFT JOIN application_language al
-        ON a.id = al.application_id
-
-    LEFT JOIN languages l
-        ON l.id = al.language_id
-
-    GROUP BY a.id
-
-    ORDER BY a.id DESC
-");
-
-$applications = $stmt->fetchAll(
-    PDO::FETCH_ASSOC
-);
-
-?>
-
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
-
 <meta charset="UTF-8">
-
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
-
-<title>Сохранённые заявки</title>
-
-<link rel="stylesheet"
-      href="style.css">
-
+<title>Лабораторная №4</title>
+<link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<div class="card large-card">
+<div class="card">
 
-    <h1>Сохранённые заявки</h1>
+<h1>Анкета пользователя</h1>
 
-    <p class="author">
-        Проект выполнила: Рыбалко Евгения
-    </p>
+<p class="author">
+Проект выполнила: Рыбалко Евгения
+</p>
 
-    <?php if (empty($applications)): ?>
+<?php if (!empty($successMessage)): ?>
+<div class="success">
+<?= $successMessage ?>
+</div>
+<?php endif; ?>
 
-        <div class="empty-box">
+<form action="submit.php" method="POST">
 
-            Пока нет сохранённых заявок
+<label>ФИО</label>
+<input
+type="text"
+name="full_name"
+value="<?= htmlspecialchars($values['full_name']) ?>"
+class="<?= isset($errors['full_name']) ? 'error' : '' ?>"
+>
 
-        </div>
+<label>Телефон</label>
+<input
+type="tel"
+name="phone"
+value="<?= htmlspecialchars($values['phone']) ?>"
+class="<?= isset($errors['phone']) ? 'error' : '' ?>"
+>
 
-    <?php else: ?>
+<label>Email</label>
+<input
+type="email"
+name="email"
+value="<?= htmlspecialchars($values['email']) ?>"
+class="<?= isset($errors['email']) ? 'error' : '' ?>"
+>
 
-        <div class="table-wrapper">
+<label>Дата рождения</label>
+<input
+type="date"
+name="birth_date"
+value="<?= htmlspecialchars($values['birth_date']) ?>"
+>
 
-            <table>
+<label>Пол</label>
 
-                <thead>
+<div class="radio-group">
 
-                <tr>
+<label>
+<input type="radio"
+name="gender"
+value="male"
+<?= $values['gender'] === 'male' ? 'checked' : '' ?>>
+Мужской
+</label>
 
-                    <th>ID</th>
-                    <th>ФИО</th>
-                    <th>Телефон</th>
-                    <th>Email</th>
-                    <th>Дата рождения</th>
-                    <th>Пол</th>
-                    <th>Биография</th>
-                    <th>Контракт</th>
-                    <th>Языки</th>
-                    <th>Дата создания</th>
+<label>
+<input type="radio"
+name="gender"
+value="female"
+<?= $values['gender'] === 'female' ? 'checked' : '' ?>>
+Женский
+</label>
 
-                </tr>
+</div>
 
-                </thead>
+<label>Языки программирования</label>
 
-                <tbody>
+<?php
+$selectedLanguages =
+json_decode(
+$_COOKIE['languages'] ?? '[]',
+true
+);
+?>
 
-                <?php foreach ($applications as $app): ?>
+<select
+name="languages[]"
+multiple
+>
 
-                    <tr>
+<?php foreach ($languages as $language): ?>
 
-                        <td>
-                            <?= htmlspecialchars($app['id']) ?>
-                        </td>
+<option
+value="<?= $language['id'] ?>"
+<?= in_array($language['id'], $selectedLanguages ?? []) ? 'selected' : '' ?>
+>
 
-                        <td>
-                            <?= htmlspecialchars($app['full_name']) ?>
-                        </td>
+<?= htmlspecialchars($language['title']) ?>
 
-                        <td>
-                            <?= htmlspecialchars($app['phone']) ?>
-                        </td>
+</option>
 
-                        <td>
-                            <?= htmlspecialchars($app['email']) ?>
-                        </td>
+<?php endforeach; ?>
 
-                        <td>
-                            <?= htmlspecialchars($app['birth_date']) ?>
-                        </td>
+</select>
 
-                        <td>
-                            <?= $app['gender'] === 'male'
-                                ? 'Мужской'
-                                : 'Женский' ?>
-                        </td>
+<label>Биография</label>
 
-                        <td class="bio-cell">
-                            <?= nl2br(
-                                htmlspecialchars(
-                                    $app['biography']
-                                )
-                            ) ?>
-                        </td>
+<textarea
+name="biography"
+rows="5"
+><?= htmlspecialchars($values['biography']) ?></textarea>
 
-                        <td>
-                            <?= $app['agreement']
-                                ? 'Да'
-                                : 'Нет' ?>
-                        </td>
+<label class="checkbox">
+<input
+type="checkbox"
+name="agreement"
+<?= !empty($values['agreement']) ? 'checked' : '' ?>
+>
+С контрактом ознакомлен(а)
+</label>
 
-                        <td>
-                            <?= htmlspecialchars(
-                                $app['languages']
-                            ) ?>
-                        </td>
+<button type="submit">
+Сохранить
+</button>
 
-                        <td>
-                            <?= htmlspecialchars(
-                                $app['created_at']
-                            ) ?>
-                        </td>
+</form>
 
-                    </tr>
-
-                <?php endforeach; ?>
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    <?php endif; ?>
-
-    <div class="bottom-link">
-
-        <a href="index.php">
-
-            Вернуться к форме
-
-        </a>
-
-    </div>
+<div class="bottom-link">
+<a href="view.php">
+Просмотреть заявки
+</a>
+</div>
 
 </div>
 
 </body>
-
 </html>

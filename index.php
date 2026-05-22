@@ -68,5 +68,3 @@ $languages = $stmt->fetchAll(
 );
 
 include 'form.php';
-
-?>
